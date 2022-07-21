@@ -1,0 +1,121 @@
+
+IF EXISTS (SELECT * FROM sys.external_tables WHERE name = 'BidgelyError')
+
+DROP EXTERNAL TABLE sandbox.BidgelyError
+
+GO
+
+CREATE EXTERNAL TABLE sandbox.BidgelyError (
+
+[orig_record] nvarchar(1000),
+
+    [line_number] int,
+
+    [error_code] nvarchar(50),
+
+    [error_desc] nvarchar(400),
+
+    [column_id] int,
+
+    [account_type] nvarchar(10),
+
+    [customer_id] nvarchar(40),
+
+    [account_id] nvarchar(40),
+
+    [premise_id] nvarchar(40),
+
+    [file_name] nvarchar(100),
+
+    [category_type] nvarchar(20),
+
+    [date_of_extraction] date,
+
+    [error_info] nvarchar(100),
+
+    [load_date] datetime
+
+    )
+
+    WITH (
+
+    LOCATION = 'error/bidgely/**',
+
+    DATA_SOURCE = [contnspdlcemsz],
+
+    FILE_FORMAT = [SynapseParquetFormat]
+
+    )
+
+GO
+IF EXISTS (SELECT * FROM sys.external_tables WHERE name = 'BidgelyErrorHistorical')
+
+DROP EXTERNAL TABLE sandbox.BidgelyErrorHistorical
+
+GO
+
+CREATE EXTERNAL TABLE sandbox.BidgelyErrorHistorical (
+
+[orig_record] nvarchar(1000),
+
+    [line_number] int,
+
+    [error_code] nvarchar(50),
+
+    [error_desc] nvarchar(400),
+
+    [column_id] int,
+
+    [account_type] nvarchar(10),
+
+    [customer_id] nvarchar(40),
+
+    [account_id] nvarchar(40),
+
+    [premise_id] nvarchar(40),
+
+    [file_name] nvarchar(100),
+
+    [category_type] nvarchar(20),
+
+    [date_of_extraction] date,
+
+    [error_info] nvarchar(100),
+
+    [load_date] datetime
+
+    )
+
+    WITH (
+
+    LOCATION = 'error/bidgely/*/*/Year=*/Month=*/Date=*/*/*.parquet',
+
+    DATA_SOURCE = [contnspdlcemsz],
+
+    FILE_FORMAT = [SynapseParquetFormat]
+
+    )
+
+GO
+IF EXISTS (SELECT * FROM sys.views WHERE name = 'BidgelyError_6months')
+
+DROP VIEW IF EXISTS [sandbox].[BidgelyError_6months];
+GO
+CREATE VIEW [sandbox].[BidgelyError_6months]
+	AS select *
+from sandbox.BidgelyError
+where [load_date] >= DATEADD (month , -6 , CONVERT (date, CURRENT_TIMESTAMP)) UNION ALL select *
+from sandbox.BidgelyErrorHistorical
+where [load_date] >= DATEADD (month , -6 , CONVERT (date, CURRENT_TIMESTAMP));
+
+GO
+IF EXISTS (SELECT * FROM sys.views WHERE name = 'BidgelyError_5days')
+
+DROP VIEW IF EXISTS [sandbox].[BidgelyError_5days];
+GO
+CREATE VIEW [sandbox].[BidgelyError_5days]
+	AS select *
+from sandbox.BidgelyError
+where [load_date] >= DATEADD (day , -5 , CONVERT (date, CURRENT_TIMESTAMP)) UNION ALL select *
+from sandbox.BidgelyError
+where [load_date] >= DATEADD (day , -5 , CONVERT (date, CURRENT_TIMESTAMP));
